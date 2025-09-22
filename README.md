@@ -1,4 +1,4 @@
-# Syntax Study — Programming Study Chat Room App
+# Syntax Study — Chat Room App
 
 A collaborative **chat room platform built with Django**, designed for programmers to study together, share knowledge, and collaborate on coding problems. The app includes authentication, profile customization, room creation, and light/dark theme support.
 
