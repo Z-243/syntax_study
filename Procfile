@@ -1,2 +1,2 @@
-web: gunicorn syntax_studys.wsgi
+web: gunicorn syntax_study.wsgi
 
