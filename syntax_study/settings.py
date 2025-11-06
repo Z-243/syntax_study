@@ -12,26 +12,49 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# -------------------------
+# Load .env (for local dev)
+# -------------------------
+load_dotenv(BASE_DIR / ".env")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-dev-key")
 
+# ----------------------
+# SECURITY
+# ----------------------
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("❌ DJANGO_SECRET_KEY environment variable is not set!")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
+if DEBUG:
+    print("⚙️ Running in development mode")
+else:
+    print("🚀 Running in production mode")
 
 
-# Application definition
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS", ".onrender.com,localhost,127.0.0.1"
+).split(",")
+
+
+# ----------------------
+# INSTALLED APPS
+# ----------------------
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -48,6 +71,10 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "base.User"
 
 
+# ----------------------
+# MIDDLEWARE
+# ----------------------
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -62,7 +89,27 @@ MIDDLEWARE = [
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+
+# ----------------------
+# CSRF
+# ----------------------
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    ]
+else:
+    origins = os.environ.get("CSRF_TRUSTED_ORIGINS")
+    if origins:
+        CSRF_TRUSTED_ORIGINS = origins.split(",")
+    else:
+        CSRF_TRUSTED_ORIGINS = []
+
+
+# ----------------------
+# URLS and WSGI
+# ----------------------
 
 ROOT_URLCONF = "syntax_study.urls"
 
@@ -84,18 +131,32 @@ TEMPLATES = [
 WSGI_APPLICATION = "syntax_study.wsgi.application"
 
 
+# ----------------------
+# DATABASE
+# ----------------------
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR}/db.sqlite3")
+
+# Only require SSL if it's PostgreSQL
+if DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://"):
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL, conn_max_age=600, ssl_require=not DEBUG
+        )
     }
-}
+else:
+    # SQLite fallback
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
 
-# Password validation
+# ----------------------
+# PASSWORD VALIDATION
+# ----------------------
+
+
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -114,7 +175,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
+# ----------------------
+# INTERNATIONALIZATION
+# ----------------------
+
+
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
@@ -126,24 +191,51 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# ----------------------
+# STATIC FILES
+# ----------------------
+
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
-MEDIA_URL = "/images/"
+STATICFILES_DIRS = [BASE_DIR / "static"]  # dev files
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # production collectstatic
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
+# ----------------------
+# MEDIA FILES
+# ----------------------
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
-MEDIA_ROOT = BASE_DIR / "static/images"
 
-# STATIC_ROOT = for profile pictures
+# ----------------------
+# DEFAULT AUTO FIELD
+# ----------------------
 
-# Default primary key field type
+
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+# ----------------------
+# CORS
+# ----------------------
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+# -------------------------
+# Security (production only)
+# -------------------------
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.onrender.com",
+    ]
