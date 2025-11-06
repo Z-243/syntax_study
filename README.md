@@ -60,4 +60,4 @@ The app is built using **Django** (Python web framework) with the following key 
 
 ## 🚀Demo
 
-👉 [Syntax Study || Chat Room App](https://sub-keeper.netlify.app/)
+👉 [Syntax Study || Chat Room App](https://syntax-studys.onrender.com/)
