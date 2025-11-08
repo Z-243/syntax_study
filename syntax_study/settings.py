@@ -12,25 +12,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
-import dj_database_url
 from dotenv import load_dotenv
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# -------------------------
+# Load .env early (for local dev)
+# -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# -------------------------
-# Load .env (for local dev)
-# -------------------------
 load_dotenv(BASE_DIR / ".env")
 
+import dj_database_url
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
 
 
 # ----------------------
@@ -54,6 +48,42 @@ ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS", ".onrender.com,localhost,127.0.0.1"
 ).split(",")
 
+# ----------------------
+# MEDIA & CLOUDINARY CONFIGURATION
+# ----------------------
+
+USE_CLOUDINARY = not DEBUG  # use Cloudinary only in production (Render)
+
+if USE_CLOUDINARY:
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
+        "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
+    }
+
+    cloudinary.config(
+        cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.getenv("CLOUDINARY_API_KEY"),
+        api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+        secure=True,
+    )
+
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = "/media/"  # Cloudinary auto-handles URLs
+    MEDIA_ROOT = ""  # not needed for cloud storage
+
+    print(f"☁️ Using Cloudinary storage: {cloudinary.config().cloud_name}")
+
+else:
+    # Local development (store media files on disk)
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+    print("💾 Using local FileSystem storage")
+
 
 # ----------------------
 # INSTALLED APPS
@@ -66,32 +96,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "base.apps.BaseConfig",
     "rest_framework",
     "corsheaders",
     "cloudinary",
     "cloudinary_storage",
+    "base.apps.BaseConfig",
 ]
 
-# Cloudinary settings
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
-    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
-}
-
-# Explicitly initialize Cloudinary SDK
-cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-    secure=True,
-)
-
-print(f"🧩 Cloudinary loaded with cloud_name={cloudinary.config().cloud_name}")
-
-# Use Cloudinary for uploaded media
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 AUTH_USER_MODEL = "base.User"
 
@@ -227,12 +238,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]  # dev files
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # production collectstatic
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-# ----------------------
-# MEDIA FILES
-# ----------------------
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
 
 
 # ----------------------
