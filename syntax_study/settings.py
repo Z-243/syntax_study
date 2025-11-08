@@ -21,10 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 import dj_database_url
-
-# import cloudinary
-# import cloudinary.uploader
-# import cloudinary.api
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 
 # ----------------------
@@ -37,6 +36,9 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
+
+# DEBUG = False
+
 
 if DEBUG:
     print("⚙️ Running in development mode")
@@ -55,35 +57,22 @@ ALLOWED_HOSTS = os.environ.get(
 USE_CLOUDINARY = not DEBUG  # use Cloudinary only in production (Render)
 
 if USE_CLOUDINARY:
-    import cloudinary
-    import cloudinary.uploader
-    import cloudinary.api
-
-    CLOUDINARY_STORAGE = {
-        "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
-        "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
-        "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
-    }
+    print(f"☁️ Using Cloudinary storage: {os.environ.get('CLOUDINARY_CLOUD_NAME')}")
 
     cloudinary.config(
-        cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-        api_key=os.getenv("CLOUDINARY_API_KEY"),
-        api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+        cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.environ.get("CLOUDINARY_API_KEY"),
+        api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
         secure=True,
     )
 
     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    MEDIA_URL = "/media/"  # Cloudinary auto-handles URLs
-    MEDIA_ROOT = ""  # not needed for cloud storage
-
-    print(f"☁️ Using Cloudinary storage: {cloudinary.config().cloud_name}")
-
+    MEDIA_URL = "/media/"  # not used, but keeps templates consistent
+    MEDIA_ROOT = ""  # disable local writes
 else:
-    # Local development (store media files on disk)
+    print("💾 Using local media storage (development mode)")
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
-    print("💾 Using local FileSystem storage")
-
 
 # ----------------------
 # INSTALLED APPS
