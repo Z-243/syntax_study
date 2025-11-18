@@ -22,7 +22,6 @@ load_dotenv(BASE_DIR / ".env")
 
 import dj_database_url
 import cloudinary
-import cloudinary_storage
 import cloudinary.uploader
 import cloudinary.api
 
@@ -37,8 +36,6 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
-
-# DEBUG = False
 
 
 if DEBUG:
@@ -55,23 +52,45 @@ ALLOWED_HOSTS = os.environ.get(
 # MEDIA & CLOUDINARY CONFIGURATION
 # ----------------------
 
-USE_CLOUDINARY = not DEBUG  # use Cloudinary only in production (Render)
+USE_CLOUDINARY = os.environ.get("USE_CLOUDINARY", "False").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 if USE_CLOUDINARY:
-    print(f"☁️ Using Cloudinary storage: {os.environ.get('CLOUDINARY_CLOUD_NAME')}")
+    print("☁️ Using Cloudinary")
 
-    cloudinary.config(
-        cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-        api_key=os.environ.get("CLOUDINARY_API_KEY"),
-        api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-        secure=True,
-    )
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+        "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
+    }
 
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    MEDIA_URL = "/media/"  # not used, but keeps templates consistent
-    MEDIA_ROOT = ""  # disable local writes
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    MEDIA_URL = ""
+    MEDIA_ROOT = None
+
 else:
     print("💾 Using local media storage (development mode)")
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
@@ -126,12 +145,9 @@ if DEBUG:
         "http://localhost:8000",
     ]
 else:
-    origins = os.environ.get("CSRF_TRUSTED_ORIGINS")
-    if origins:
-        CSRF_TRUSTED_ORIGINS = origins.split(",")
-    else:
-        CSRF_TRUSTED_ORIGINS = []
-
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.onrender.com",
+    ]
 
 # ----------------------
 # URLS and WSGI
@@ -256,6 +272,3 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    CSRF_TRUSTED_ORIGINS = [
-        "https://*.onrender.com",
-    ]

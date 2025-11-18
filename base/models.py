@@ -11,7 +11,7 @@ class User(AbstractUser):
     bio = models.TextField(null=True)
 
     avatar = models.ImageField(
-        upload_to="avatars/", null=True, blank=True, default="avatar.svg"
+        upload_to="avatars/", null=True, blank=True, default="avatars/avatar.svg"
     )
 
     USERNAME_FIELD = "email"
