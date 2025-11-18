@@ -1,6 +1,6 @@
 # Syntax Study — Chat Room App
 
-A collaborative **chat room platform built with Django**, designed for programmers to study together, share knowledge, and collaborate on coding problems. The app includes authentication, profile customization, room creation, and light/dark theme support.
+A collaborative **chat room platform built with Django**, designed for programmers to study together, share knowledge, and collaborate on coding problems. The app includes authentication, profile customization, room creation, Cloudinary-hosted profile avatars, and light/dark theme support.
 
 ---
 
@@ -19,14 +19,27 @@ It’s like a **mini-Discord/Slack for programmers**, but focused on **study and
 
 ---
 
+## 🚀 Cloudinary Avatar Hosting (Production Ready)
+
+This project supports **secure image uploads** using **Cloudinary CDN**, ideal for production deployment.
+
+| Mode | Avatar Upload Location |
+|-------|------------------------|
+| Local Development | Stored in `/media/` directory |
+| Production (Render, etc.) | Uploaded to **Cloudinary** |
+
+The app automatically switches between **local file storage** and **Cloudinary** based on environment configuration.
+
+---
+
 ## ❓ Why build this app?
 
-Programming is best learned together. Many beginners and advanced developers face challenges like:
-- Finding peers to **discuss coding concepts**.  
-- Preparing for **coding interviews** or studying algorithms.  
-- Needing a **focused, distraction-free space** to collaborate.  
+Learning and problem-solving improve dramatically when developers collaborate. This platform provides:
 
-This app solves these problems by providing a dedicated platform for study-focused, programming-specific discussions.  
+- Peer-driven learning  
+- Topic-focused chat spaces  
+- Zero-distraction study environment  
+- Beginner-friendly interaction  
 
 ---
 
@@ -36,25 +49,30 @@ The app is built using **Django** (Python web framework) with the following key 
 
 ### 🔑 Authentication
 - Django’s authentication system for **login, logout, and signup**.  
-- Profile editing   
+- Profile editing + avatar image upload  
 
 ### 🏠 Rooms & Topics
-- Each **Room** belongs to a **Topic** (e.g., Python, JavaScript, C++).  
+- Rooms are categorized by topics (Python, React, ML, DevOps, etc.)  
 - Users can create new rooms or join existing ones.  
-- Messages are stored and displayed in room threads.  
+- Real chat threads stored per room  
 
 ### 🔍 Search
-- Search bar allows filtering rooms by topic or name.  
+- Search bar allows filtering rooms by topic or room name.  
 
 ### 🎨 Styling
 - **Custom CSS** with **light and dark mode support**.  
 - Responsive layout for both desktop and mobile.  
 
 ### 🛠️ Tech Stack
-- **Backend**: Django  
-- **Frontend**: Django Templates + CSS (with theme variables)  
-- **Database**: SQLite (default, can be swapped for PostgreSQL/MySQL)  
-- **Static/Media**: Django staticfiles (profile image upload support)  
+
+| Layer | Technology |
+|--------|-----------|
+| Backend | **Django (Python)** |
+| Frontend | Django Templates + CSS |
+| Database | SQLite (dev), supports PostgreSQL |
+| Auth | Django Auth |
+| Media | Local FS + Cloudinary |
+| Deployment | Render (optional) |
 
 ---
 
